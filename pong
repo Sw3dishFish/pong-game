@@ -1,0 +1,430 @@
+import pygame
+import sys
+import numpy as np
+import time
+
+pygame.init()
+
+#colors
+WHITE = (65, 65, 65)
+GRAY = (60, 60, 60)
+BLACK = (60, 60, 60)
+BLUE = (50, 150, 255)
+GREEN = (57, 255, 20)
+PURPLE = (177, 157, 217)
+
+#screen
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Home Screen Example")
+screen.fill(GRAY)
+
+#fonts
+font = pygame.font.Font("Crimson Python\Pong game\PressStart2P-Regular.ttf", 30)
+title = font.render("PONG", True, PURPLE)
+menuText = font.render("CHOOSE YOUR OPPONENT", True, PURPLE)
+aiMenuText = font.render("CHOOSE YOUR DIFFICULTY", True, PURPLE)
+humanWinText1 = font.render("LEFT PLAYER WINS" , True, PURPLE)
+humanWinText2 = font.render("RIGHT PLAYER WINS" , True, PURPLE)
+aiWin = font.render("AI WINS" , True, PURPLE)
+aiLose = font.render("PLAYER WINS" , True, PURPLE)
+pauseText = font.render("GAME PAUSED: P TO RESUME" , True, PURPLE)
+settingText = font.render("SETTINGS" , True, PURPLE)
+menuTextX = 100
+menuTextX2 = 900
+
+score1 = 0
+score2 = 0
+
+#keys
+p1up = pygame.K_UP
+p1down = pygame.K_DOWN
+p2up = pygame.K_w
+p2down = pygame.K_s
+
+#ball
+bx = 5
+by = 0
+x = 390
+y = 280
+
+#paddle
+px = 760
+py = 250
+pspeed = 7
+
+p2x = 40
+p2y = 250
+
+#time
+waittime = 0
+
+#two-player
+twoPlayer = False
+#ai
+aiBasic = False
+aiMenu = False
+#menu
+mainMenu = False
+pauseMenu = False
+gameOver = False
+settingMenu = True
+#pause
+toggle = True
+
+#text
+def get_fitted_font(text, max_width, base_font_size, min_font_size=12):
+    """Returns a font sized to fit the text within max_width"""
+    font_size = base_font_size
+
+    while font_size >= min_font_size:
+        test_font = pygame.font.Font("Crimson Python\Pong game\PressStart2P-Regular.ttf", font_size)
+        test_surface = test_font.render(text, True, BLACK)
+
+        if test_surface.get_width() <= max_width:
+            return test_font
+
+        font_size -= 2  # Decrease by 2 each iteration
+
+    # Return minimum font size if text is still too large
+    return pygame.font.Font("Crimson Python\Pong game\PressStart2P-Regular.ttf", min_font_size)
+
+
+#button
+def draw_button(screen, text, rect, inactive_color, active_color, text_color=PURPLE):
+    """
+    Draws a button and checks if it is clicked.
+
+    Parameters:
+        screen (pygame.Surface): The surface to draw the button on.
+        text (str): The text to display on the button.
+        rect (tuple): A tuple (x, y, width, height) defining button position and size.
+        inactive_color (tuple): RGB color when button is not hovered.
+        active_color (tuple): RGB color when button is hovered over.
+        text_color (tuple): RGB color of the text (default = black).
+
+    Returns:
+        bool: True if the button is clicked, otherwise False.
+    """
+
+    # Get the current mouse position (x, y)
+    mouse = pygame.mouse.get_pos()
+
+    # Get mouse click state -> (left, middle, right), each 0 or 1
+    click = pygame.mouse.get_pressed()
+
+    # Create a pygame rectangle for the button
+    x, y, w, h = rect
+    button_rect = pygame.Rect(rect)
+
+    # Check if mouse is inside the button's area
+    if button_rect.collidepoint(mouse):
+        # Draw button with hover (active) color
+        pygame.draw.rect(screen, active_color, button_rect)
+
+        # If left mouse button is pressed while hovering
+        if click[0] == 1:
+            # Makes sure to only register one click
+            while pygame.mouse.get_pressed()[0] == 1:
+                pygame.event.pump()
+            return True  # Signal that the button was clicked
+
+    else:
+        # Draw button with normal (inactive) color
+        pygame.draw.rect(screen, inactive_color, button_rect)
+
+    # Render the text surface
+    text_surf = font.render(text, True, text_color)
+
+    # Center the text inside the button rectangle
+    text_rect = text_surf.get_rect(center=button_rect.center)
+
+    # Draw the text on the screen
+    screen.blit(text_surf, text_rect)
+
+    return False  # If not clicked, return False
+
+running = True
+while running:
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                if not mainMenu and not settingMenu and not p1upButton:
+                    if toggle:
+                        pauseMenu = True
+                        toggle = False
+                    else: 
+                        pauseMenu = False
+                        toggle = True
+                        waittime = 1
+            if p1upButton and event.key != pygame.K_p:
+                p1up = event.key
+                p1upButton = False
+                settingMenu = True
+            if p1downButton and event.key != pygame.K_p:
+                p1down = event.key
+                p1downButton = False
+                settingMenu = True
+            if p2upButton and event.key != pygame.K_p:
+                p2up = event.key
+                p2upButton = False
+                settingMenu = True
+            if p2downButton and event.key != pygame.K_p:
+                p2down = event.key
+                p2downButton = False
+                settingMenu = True
+
+
+    if pauseMenu:
+        screen.fill(GRAY)
+        screen.blit(title, (342.5, 50))
+        screen.blit(pauseText, (40, 150))
+        # 30 chars
+        mainMenu = draw_button(screen, 'MENU', (300,250, 200, 100), BLACK, WHITE, PURPLE)
+        if mainMenu or settingMenu:
+            pauseMenu = False
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
+        continue
+
+
+    if settingMenu:
+        screen.fill(GRAY)   
+        screen.blit(title, (342.5, 50))
+        screen.blit(settingText, (282.5, 150))
+        mainMenu = draw_button(screen, '<- MENU', (35,50, 225, 100), BLACK, WHITE, PURPLE)
+        p1upButton = draw_button(screen, 'P1UP: ' + pygame.key.name(p1up), (0, 300, 400, 100), BLACK, WHITE, PURPLE)
+        p1downButton = draw_button(screen, 'P1DOWN: ' + pygame.key.name(p1down), (0, 450, 400, 100), BLACK, WHITE, PURPLE)
+        p2upButton = draw_button(screen, 'P2UP: ' + pygame.key.name(p2up), (400, 300, 400, 100), BLACK, WHITE, PURPLE)
+        p2downButton = draw_button(screen, 'P2DOWN: ' + pygame.key.name(p2down), (400, 450, 400, 100), BLACK, WHITE, PURPLE)
+        if p1upButton or p1downButton or p2upButton or p2downButton:
+            settingMenu = False
+        if mainMenu:
+            settingMenu = False
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
+        continue
+    if p1upButton or p1downButton or p2upButton or p2downButton:
+        draw_button(screen, 'Bind a key other than "P"', (200, 200, 400, 100), GRAY, GRAY, PURPLE)
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
+        continue
+    
+
+    if mainMenu:
+        bx = 5
+        by = 0
+        x = 390
+        y = 280
+
+        #paddle
+        px = 760
+        py = 250
+        pspeed = 7
+
+        p2x = 40
+        p2y = 250
+        twoPlayer = False
+        aiBasic = False
+        aiMenu = False
+        toggle = True
+        score1, score2 = 0, 0
+        screen.fill(GRAY)
+        screen.blit(title, (342.5, 50))
+        screen.blit(menuText, (menuTextX, 150))
+        screen.blit(menuText, (menuTextX2, 150))
+        human = draw_button(screen, 'HUMAN', (100, 250, 200, 100), BLACK, WHITE, PURPLE)
+        aiButton = draw_button(screen, 'AI', (500, 250, 200, 100), BLACK, WHITE, PURPLE)
+        settingMenu = draw_button(screen, "SETTINGS", (200, 450, 400, 100), BLACK, WHITE, PURPLE)
+
+        if human:
+            twoPlayer = True
+            mainMenu = False
+        if aiButton:
+            mainMenu = False
+            aiMenu = True
+        if settingMenu:
+            mainMenu = False
+
+        menuTextX -= 5
+        menuTextX2 -= 5
+        if menuTextX <= -800:
+            menuTextX = 800
+        if menuTextX2 <= -800:
+            menuTextX2 = 800
+
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
+        continue
+    
+    if aiMenu:
+        screen.fill(GRAY)
+        screen.blit(title, (342.5, 50))
+        screen.blit(aiMenuText, (menuTextX, 150))
+        screen.blit(aiMenuText, (menuTextX2, 150))
+        easyMode = draw_button(screen, 'EASY', (100, 250, 200, 100), BLACK, WHITE, PURPLE)
+        mediumMode = draw_button(screen, 'MEDIUM', (500, 250, 200, 100), BLACK, WHITE, PURPLE)
+        impossibleMode = draw_button(screen, "IMPOSSIBLE", (200, 450, 400, 100), BLACK, WHITE, PURPLE)
+
+        if easyMode:
+            aiBasic = True
+            aiMenu = False
+            aiBasicSpeed = 3
+        if mediumMode:
+            aiBasicSpeed = 4
+            aiBasic = True
+            aiMenu = False
+        if impossibleMode:
+            aiBasicSpeed = 6
+            aiBasic = True
+            aiMenu = False          
+
+        menuTextX -= 5
+        menuTextX2 -= 5
+        if menuTextX <= -800:
+            menuTextX = 800
+        if menuTextX2 <= -800:
+            menuTextX2 = 800
+
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
+        continue
+
+    if gameOver:
+        screen.fill(GRAY)
+        screen.blit(title, (342.5, 50))
+        playAgain = draw_button(screen, 'PLAY AGAIN', (200, 250, 400, 100), BLACK, WHITE, PURPLE)
+        goMenu = draw_button(screen, 'MAIN MENU', (200, 375, 400, 100), BLACK, WHITE, PURPLE)
+
+
+        if twoPlayer:
+            if score1 > score2:
+                screen.blit(humanWinText1, (menuTextX, 150))
+                screen.blit(humanWinText1, (menuTextX2, 150))
+            else:
+                screen.blit(humanWinText2, (menuTextX, 150))
+                screen.blit(humanWinText2, (menuTextX2, 150))
+        
+        if aiBasic:
+            if score1 > score2:
+                screen.blit(aiWin, (menuTextX, 150))
+                screen.blit(aiWin, (menuTextX2, 150))
+            else: 
+                screen.blit(aiLose, (menuTextX, 150))
+                screen.blit(aiLose, (menuTextX2, 150))
+
+        if playAgain:
+            gameOver = False
+            score1 = 0
+            score2= 0
+        if goMenu:
+            mainMenu = True
+            gameOver = False
+            score1 = 0
+            score2= 0
+            twoPlayer = False
+            aiBasic = False
+
+        menuTextX -= 5
+        menuTextX2 -= 5
+        if menuTextX <= -800:
+            menuTextX = 800
+        if menuTextX2 <= -800:
+            menuTextX2 = 800
+
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
+        continue
+
+    #controls
+    keys = pygame.key.get_pressed()
+    if keys[p1up] and py >= 10:
+        py -= pspeed
+    if keys[p1down] and py <= 490:
+        py += pspeed
+
+    if twoPlayer:
+        if keys[p2up] and p2y >= 10:
+            p2y -= pspeed
+        if keys[p2down] and p2y <= 490:
+            p2y += pspeed
+
+    #ai basic
+    if aiBasic:
+        if y > p2y + 90:
+            p2y += aiBasicSpeed
+        elif y < p2y:
+            p2y -= aiBasicSpeed
+        # else: 
+        # continue
+        p2y = np.clip(p2y, 10, 490)
+
+    #ball
+    x += bx
+    y += by
+
+    #collision
+    if x >= 740 and (y >= py and y <= py+100):
+        bx = np.random.randint(-10, -5)
+        by = np.random.randint(-5, 5)
+    if y >= 590 or y <= 10:
+        by = -by
+    
+    if x <= 60 and (y >= p2y and y <= p2y+100):
+        bx = np.random.randint(5, 10)
+        # by = np.random.randint(-20, 20)
+
+    #scoring
+    if x >= 800:
+        score1 += 1
+        p2y, py = 250, 250
+        x = 390
+        y = 280
+        bx = 5
+        by = 0
+        waittime = 1
+    if x <= 0:
+        score2 += 1
+        p2y, py = 250, 250
+        x = 390
+        y = 280
+        bx = 5
+        by = 0
+        waittime = 1
+
+    #drawing
+    screen.fill(GRAY)    
+    #ball
+    pygame.draw.rect(screen, PURPLE, (x,y, 20,20))
+    #paddle
+    pygame.draw.rect(screen, PURPLE, (px,py, 20,100))
+    pygame.draw.rect(screen, PURPLE, (p2x,p2y, 20,100))
+    screen.blit(title, (342.5, 50))
+    score_player = font.render(str(score1), True, PURPLE)
+    score_ai = font.render(str(score2), True, PURPLE)
+    screen.blit(score_player, (187.5, 50))
+    screen.blit(score_ai, (587.5, 50))
+
+    #testing
+    # pygame.draw.rect(screen, BLACK,[390, 0, 20, 600])
+    # pygame.draw.rect(screen, BLACK,[340, 0, 120, 400])
+    # pygame.draw.rect(screen, BLACK,[185, 0, 30, 400])
+    # pygame.draw.rect(screen, BLACK,[585, 0, 30, 400])
+    
+    pygame.display.flip()
+
+    pygame.time.Clock().tick(60)
+    
+    if score1 > 9:
+        gameOver = True
+    if score2 > 9:
+        gameOver = True
+    if waittime == 1:
+        time.sleep(0.7)
+        waittime = 0
+    
+pygame.quit()
+sys.exit()
