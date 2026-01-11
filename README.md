@@ -4,5 +4,5 @@ My version of the classic game, pong, built from scratch using pygame with remap
 In order to run the game, you will need the following libraries downloaded. Included links provide tutorials:
 
 Pygame: https://www.pygame.org/wiki/GettingStarted
-Numpy: https://numpy.org/install/
 
+Numpy: https://numpy.org/install/
