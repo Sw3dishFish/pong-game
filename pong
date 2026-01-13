@@ -65,10 +65,10 @@ twoPlayer = False
 aiBasic = False
 aiMenu = False
 #menu
-mainMenu = False
+mainMenu = True
 pauseMenu = False
 gameOver = False
-settingMenu = True
+settingMenu = False
 #pause
 toggle = True
 
@@ -427,4 +427,5 @@ while running:
         waittime = 0
     
 pygame.quit()
+
 sys.exit()
