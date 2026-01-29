@@ -71,6 +71,12 @@ gameOver = False
 settingMenu = False
 #pause
 toggle = True
+# key-rebind button states (VERY IMPORTANT)
+p1upButton = False
+p1downButton = False
+p2upButton = False
+p2downButton = False
+
 
 #text
 def get_fitted_font(text, max_width, base_font_size, min_font_size=12):
@@ -152,7 +158,7 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_p:
-                if not mainMenu and not settingMenu and not p1upButton:
+                if not mainMenu and not settingMenu and not p1upButton and not p2upButton and not p1downButton and not p2downButton:
                     if toggle:
                         pauseMenu = True
                         toggle = False
@@ -196,10 +202,10 @@ while running:
         screen.blit(title, (342.5, 50))
         screen.blit(settingText, (282.5, 150))
         mainMenu = draw_button(screen, '<- MENU', (35,50, 225, 100), BLACK, WHITE, PURPLE)
-        p1upButton = draw_button(screen, 'P1UP: ' + pygame.key.name(p1up), (0, 300, 400, 100), BLACK, WHITE, PURPLE)
-        p1downButton = draw_button(screen, 'P1DOWN: ' + pygame.key.name(p1down), (0, 450, 400, 100), BLACK, WHITE, PURPLE)
-        p2upButton = draw_button(screen, 'P2UP: ' + pygame.key.name(p2up), (400, 300, 400, 100), BLACK, WHITE, PURPLE)
-        p2downButton = draw_button(screen, 'P2DOWN: ' + pygame.key.name(p2down), (400, 450, 400, 100), BLACK, WHITE, PURPLE)
+        p1upButton = draw_button(screen, 'P1UP: ' + pygame.key.name(p1up), (400, 300, 400, 100), BLACK, WHITE, PURPLE)
+        p1downButton = draw_button(screen, 'P1DOWN: ' + pygame.key.name(p1down),(400, 450, 400, 100), BLACK, WHITE, PURPLE)
+        p2upButton = draw_button(screen, 'P2UP: ' + pygame.key.name(p2up), (0, 300, 400, 100), BLACK, WHITE, PURPLE)
+        p2downButton = draw_button(screen, 'P2DOWN: ' + pygame.key.name(p2down), (0, 450, 400, 100), BLACK, WHITE, PURPLE)
         if p1upButton or p1downButton or p2upButton or p2downButton:
             settingMenu = False
         if mainMenu:
@@ -427,5 +433,4 @@ while running:
         waittime = 0
     
 pygame.quit()
-
 sys.exit()
